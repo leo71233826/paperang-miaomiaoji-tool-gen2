@@ -137,6 +137,11 @@ def printImg(img_bytes):
 
 
 if __name__ == "__main__":
+    main()
+
+
+def main():
+    """Main entry point for interactive CLI mode."""
     from paperang.config import setup_config
     from paperang.bt import BtManager
 

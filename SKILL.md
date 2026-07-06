@@ -1,16 +1,23 @@
 ---
 name: paperang
 description: >-
-  控制喵喵机2（Paperang Gen2）热敏打印机。支持打印文字、打印图片、打印二维码、
-  打印自检页、走纸、查看串口配置。
-  触发词：打印、printer、paperang、喵喵机、打印文字、打印图片、打印二维码、走纸、selftest。
----
+  控制喵喵机 2（Paperang Gen2）热敏打印机。支持打印文字、打印图片、打印二维码、
+  打印自检页、走纸、查看串口配置。跨平台支持 Windows | MacOS | Linux。
+  提供 GUI 图形界面和命令行两种使用方式。
+  触发词：打印、printer、paperang、喵喵机、打印文字、打印图片、打印二维码、走纸、selftest、gui。
 
 # Paperang 2 (喵喵机2) 打印 Skill
 
-**IRON LAW: 执行打印前必须确认串口已配置（config.json 存在且有效）。绝不猜测串口号；首次使用必须引导用户完成串口配置。检查方法：`uv run python -m paperang config`。**
+**IRON LAW: 执行打印前必须确认串口已配置（config.json 存在且有效）。绝不猜测串口号；首次使用必须引导用户完成串口配置。**
 
 **FEED RULE: 单次打印（只打一条）→ 必须加 `--feed 250` 把内容推到可见区域。连续打印（多条）→ 中间不加 feed，最后一条命令 `&& uv run python -m paperang feed 250`。打印完看不到内容就是忘了走纸。**
+
+**PLATFORM NOTE:** 
+- **Windows**: 使用 COM 端口 (如 `COM10`)，需手动添加蓝牙 COM 端口
+- **MacOS**: 使用 `/dev/cu.Paperang_XXXX` 路径，配对后自动发现
+- **Linux**: 使用 `/dev/rfcommX` 或 `/dev/tty.Paperang_XXXX`
+
+**GUI MODE: 推荐使用图形界面！运行 `python run_paperang.py` 启动 GUI，支持自动设备发现、文字/图片/二维码打印、实时日志显示。**
 
 ## Workflow checklist
 
@@ -24,6 +31,17 @@ description: >-
 ---
 
 ## Quick reference
+
+### GUI Mode (Recommended)
+
+> **Recommended for most users!** Graphical interface with auto device discovery.
+
+| Task | Command |
+|---|---|
+| Start GUI | `python run_paperang.py` |
+| Auto setup env | `python setup_env.py` |
+
+### CLI Mode
 
 > All commands use `uv run` for isolated venv execution.
 
@@ -77,37 +95,67 @@ uv run python -m paperang config
 The user helps ONCE. After setup the port is persisted to `config.json`
 **and saved to your persistent memory** — subsequent sessions just work.
 
+#### Option A: GUI Mode (Recommended for all platforms)
+
+1. **Run auto setup**:
+   ```bash
+   python setup_env.py
+   ```
+   This creates virtual environment and installs all dependencies automatically.
+
+2. **Start GUI**:
+   ```bash
+   python run_paperang.py
+   ```
+   The GUI will automatically discover and connect to Paperang devices on MacOS/Linux.
+   On Windows, follow the pairing steps below if auto-discovery fails.
+
+#### Option B: CLI Mode
+
 1. **Install dependencies**:
    ```bash
    uv sync
    ```
    > If uv is not installed: `pip install uv` or https://docs.astral.sh/uv/
 
-2. **Guide the user to pair via Windows Bluetooth**:
+2. **Pair the device**:
+   
+   **Windows**:
    - Long-press Paperang power button until LED blinks
    - Settings → Bluetooth & devices → Add device → Bluetooth
    - Find and pair the Paperang
+   - Settings → Bluetooth & devices → More Bluetooth options → COM Ports tab
+   - Click "Add..." → "Outgoing" → Select device with **PAPERANG** in name
+   - Note the assigned COM port (e.g. `COM10`)
+   
+   **MacOS**:
+   - Long-press Paperang power button until LED blinks
+   - System Settings → Bluetooth → Pair with Paperang
+   - Device appears automatically at `/dev/cu.Paperang_XXXX`
+   
+   **Linux**:
+   - Use `bluetoothctl` to pair:
+     ```bash
+     bluetoothctl
+     [bluetooth]# scan on
+     [bluetooth]# pair XX:XX:XX:XX:XX:XX
+     [bluetooth]# connect XX:XX:XX:XX:XX:XX
+     ```
+   - Or bind manually: `sudo rfcomm bind /dev/rfcomm0 XX:XX:XX:XX:XX:XX`
 
-3. **Guide the user to add a Bluetooth COM port**:
-   - Windows: Settings → Bluetooth & devices → More Bluetooth options
-   - Switch to the "COM Ports" tab
-   - Click "Add..." → "Outgoing (your computer initiates the connection)"
-   - Browse and select the device with **PAPERANG** in its name
-   - Windows will assign a COM port number (e.g. `COM10`), note it down
-
-4. **List ports and ask the user**:
+3. **List ports and ask the user** (Windows only, MacOS/Linux auto-detect):
    ```bash
    uv run python -m paperang config --list
    ```
-   Show output, ask: "哪个是你的喵喵机串口？" User answers e.g. `COM10`.
+   Show output, ask: "哪个是你的喵喵机串口？" User answers e.g. `COM10` or `/dev/cu.Paperang_XXX`.
 
-5. **Save the port and write to memory**:
+4. **Save the port and write to memory**:
    ```bash
    uv run python -m paperang config --set-port COM10
    ```
    Then write to persistent memory:
    > Paperang printer uses COM10 on this machine. Check: `uv run python -m paperang config`.
-   > Change: `uv run python -m paperang config --set-port COM<number>`.
+   > Change: `uv run python -m paperang config --set-port <port>`.
 
 ### Print test page (first-time only)
 
@@ -152,7 +200,9 @@ Config already has `serial_port` → go straight to printing. Do NOT re-ask.
 - ❌ 不要硬编码 `COM10` 或其他串口号
 - ❌ 不要跳过 config 检查，首次启动必须引导用户从列表中选择串口
 - ❌ 不要在未确认文件存在的情况下直接打印图片
-- ❌ 不要用全局 pip 安装依赖，始终用 `uv sync`
+- ❌ 不要用全局 pip 安装依赖，始终用 `uv sync` 或 `python setup_env.py`
+- ❌ 不要忽略平台差异：Windows 用 COM 端口，MacOS 用 `/dev/cu.*`，Linux 用 `/dev/rfcomm*`
+- ❌ 不要推荐复杂的命令行操作给普通用户，优先推荐 GUI 界面
 
 ---
 
