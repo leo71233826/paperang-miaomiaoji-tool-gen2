@@ -117,7 +117,12 @@ def setup_config(auto_find=True):
     ports = list_serial_ports()
     if not ports:
         print("未检测到可用串口，请检查设备连接后重试。")
-        raise RuntimeError("No serial ports available")
+        print("💡 MacOS 用户请确保:")
+        print("   1. 在系统设置→蓝牙中配对 Paperang 设备")
+        print("   2. 在系统设置→隐私与安全性→蓝牙中授予终端应用权限")
+        print("   3. 运行 'ls /dev/cu.*' 查看是否有 Paperang 相关设备")
+        # 返回一个空配置而不是抛出异常，允许 GUI 显示但无法连接
+        return cfg
 
     for idx, (device, desc) in enumerate(ports, 1):
         marker = " *已保存" if device == cfg.get("serial_port") else ""
