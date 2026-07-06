@@ -17,6 +17,18 @@ from paperang.text import TextConverter
 image_process_mode = "floyd"
 
 
+def main():
+    """Main entry point for interactive CLI mode."""
+    from paperang.config import setup_config
+    from paperang.bt import BtManager
+
+    logging.getLogger().setLevel(logging.INFO)
+    cfg = setup_config()
+    mmj = BtManager(cfg)
+    cli = PrinterCLI(mmj)
+    cli.run()
+
+
 class PrinterCLI:
     """Interactive command-line interface for the Paperang 2 printer."""
 
@@ -138,15 +150,3 @@ def printImg(img_bytes):
 
 if __name__ == "__main__":
     main()
-
-
-def main():
-    """Main entry point for interactive CLI mode."""
-    from paperang.config import setup_config
-    from paperang.bt import BtManager
-
-    logging.getLogger().setLevel(logging.INFO)
-    cfg = setup_config()
-    mmj = BtManager(cfg)
-    cli = PrinterCLI(mmj)
-    cli.run()
