@@ -1,6 +1,7 @@
 """Bluetooth / serial communication manager for Paperang 2 printer."""
 
 import struct
+import time
 import zlib
 import logging
 import serial
@@ -20,17 +21,34 @@ class BtManager:
         self.cfg = cfg
         self.connected = True if self.connect() else False
 
-    def connect(self):
-        try:
-            self.sock = serial.Serial(
-                self.cfg["serial_port"],
-                self.cfg.get("baudrate", 115200),
-                timeout=self.cfg.get("timeout", 1)
-            )
-            return True
-        except Exception as e:
-            logging.error(f"串口连接失败: {e}")
-            return False
+    def connect(self, max_retries=None):
+        """建立串口连接，支持重试机制"""
+        if max_retries is None:
+            max_retries = self.cfg.get("max_retries", 3)
+        
+        retry_count = 0
+        while retry_count <= max_retries:
+            try:
+                self.sock = serial.Serial(
+                    self.cfg["serial_port"],
+                    self.cfg.get("baudrate", 115200),
+                    timeout=self.cfg.get("timeout", 1),
+                    write_timeout=1  # 防止写入卡死
+                )
+                logging.info(f"成功连接到 {self.cfg['serial_port']}")
+                return True
+            except serial.SerialException as e:
+                retry_count += 1
+                if retry_count > max_retries:
+                    logging.error(f"串口连接失败（已重试{retry_count}次）: {e}")
+                    return False
+                logging.warning(f"连接失败，第{retry_count}次重试... ({e})")
+                time.sleep(0.5)
+            except Exception as e:
+                logging.error(f"串口连接异常：{e}")
+                return False
+        
+        return False
 
     def disconnect(self):
         try:
