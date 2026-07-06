@@ -10,6 +10,7 @@ Windows: 安装 Python 时勾选 tcl/tk 选项
 
 import sys
 import os
+import threading
 
 # 检查 tkinter 可用性
 try:
@@ -23,7 +24,6 @@ except ImportError:
     print("💡 Windows: 重新安装 Python 并勾选 tcl/tk 选项")
 
 if TKINTER_AVAILABLE:
-    import threading
     from PIL import Image, ImageTk
 
 # 添加项目路径
