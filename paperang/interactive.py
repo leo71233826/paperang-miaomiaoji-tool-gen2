@@ -41,19 +41,26 @@ class PrinterCLI:
         print(help_text)
 
         if self.mmj.connected:
-            self.mmj.registerCrcKeyToBt()
-            self.mmj.sendDensityToBt(100)
-            self.mmj.sendPowerOffTimeToBt(0)
+            try:
+                self.mmj.registerCrcKeyToBt()
+                self.mmj.sendDensityToBt(100)
+                self.mmj.sendPowerOffTimeToBt(0)
+            except Exception as e:
+                logging.error(f"初始化打印机失败：{e}")
+                logging.info("请检查设备是否已正确配对并处于可连接状态。")
+                return
+                
             text = ""
             while True:
                 self._process_text(text)
                 try:
-                    text = input("喵喵机2 > ").strip()
+                    text = input("喵喵机 2 > ").strip()
                 except (EOFError, KeyboardInterrupt):
                     print("\n退出。")
                     break
         else:
             logging.error("Oops! Cannot establish connection with Paperang devices.")
+            logging.info("请确保已在系统蓝牙设置中配对 Paperang 设备并重新启动程序。")
 
     def _help_text(self):
         return """欢迎使用Paperang2终端打印工具@2025
