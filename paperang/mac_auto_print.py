@@ -213,6 +213,10 @@ class PaperangPrinter:
         except Exception as e:
             logger.error(f"走纸失败：{e}")
             return False
+    
+    def scan_devices(self):
+        """扫描可用设备"""
+        cmd_scan(None)
 
 
 def cmd_scan(args):
