@@ -5,7 +5,7 @@
 
 [![License](https://img.shields.io/github/license/createskyblue/paperang-miaomiaoji-tool-gen2)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20MacOS%20%7C%20Linux-blue.svg)]()
 
 > 基于 [ihciah/paperang-miaomiaoji-tool](https://github.com/ihciah/miaomiaoji-tool) 适配，专为 **喵喵机2代 (Paperang 2)** 优化的蓝牙打印工具。
 > 支持 **命令行模式**（适合脚本/AI 调用）与 **交互式模式**（适合人工直接使用）。
@@ -23,15 +23,45 @@ A Python tool for controlling the **Paperang 2** portable Bluetooth thermal prin
 - 🖼️ **图片打印** — 自动旋转、缩放至 576px 宽度，支持 Floyd-Steinberg 扩散二值化与自适应阈值两种模式
 - 📱 **二维码打印** — 一键生成并打印二维码
 - ⚙️ **设备控制** — 自检打印、走纸、浓度调节、自动关机时间设置
-- 💻 **双模式** — `python -m paperang <command>` 命令行 + `python -m paperang interactive` 交互式
+- 💻 **三模式** — GUI 图形界面 + `python -m paperang <command>` 命令行 + `python -m paperang interactive` 交互式
+- 🍎 **跨平台** — 支持 Windows / MacOS / Linux，MacOS 自动蓝牙设备发现
 - 🤖 **Claude Code Skill** — 附带 `SKILL.md`，可直接作为 `/paperang` skill 使用
+- 🚀 **一键安装** — `python setup_env.py` 自动创建虚拟环境并安装所有依赖
 
 ---
 
 ## 📦 安装 / Installation
 
-> 🤖 **懒得手动装？** 把仓库链接丢给 AI 助手（Claude Code / Cursor / Copilot 等），它会根据 `SKILL.md` 自动帮你完成安装和配置。
-> *Too lazy? Paste the repo URL into your AI coding assistant and it'll set everything up for you.*
+### 🚀 一键自动安装（推荐）
+
+> **最简单的方式**：运行自动配置脚本，自动创建虚拟环境并安装所有依赖。
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/createskyblue/paperang-miaomiaoji-tool-gen2.git
+cd paperang-miaomiaoji-tool-gen2
+
+# 2. 运行自动配置脚本
+python setup_env.py
+```
+
+脚本会自动完成：
+- ✅ 检查 Python 版本（需要 3.7+）
+- ✅ 检测 Tkinter 支持（GUI 必需）
+- ✅ 创建虚拟环境 (`.venv`)
+- ✅ 安装所有依赖（pyserial, pillow, numpy, qrcode[pil]）
+- ✅ 生成启动脚本（`start.sh` 或 `start.bat`）
+
+完成后直接运行：
+```bash
+# MacOS/Linux
+./start.sh
+
+# Windows
+.\start.bat
+```
+
+### 📋 手动安装
 
 ```bash
 # 1. 克隆仓库
@@ -43,10 +73,34 @@ uv sync
 
 # 或使用 pip
 pip install -r requirements.txt
+
+# 3. 启动 GUI
+python run_paperang.py
 ```
 
 > 💡 推荐使用 [uv](https://docs.astral.sh/uv/) 管理虚拟环境和依赖。首次使用需 `pip install uv`。
 > 使用 uv 后，所有命令前加 `uv run`，如 `uv run python -m paperang config --list`。
+
+---
+
+## 🔧 系统依赖 / System Requirements
+
+### MacOS
+```bash
+# 安装 tkinter（如果缺失）
+brew install python-tk
+
+# 蓝牙权限：系统设置 → 隐私与安全性 → 蓝牙 → 添加终端应用
+```
+
+### Ubuntu/Debian
+```bash
+sudo apt-get install python3-tk python3-venv
+```
+
+### Windows
+- tkinter 通常随 Python 一起安装
+- 确保安装 Python 时勾选了 "tcl/tk" 选项
 
 ---
 
@@ -73,7 +127,29 @@ python -m paperang config --set-port COM10    # 设置端口（仅需一次）
 
 ## 🚀 使用方式 / Usage
 
-### 命令行模式 / CLI Mode
+### 🖥️ GUI 图形界面（推荐）
+
+> **最简单的方式**：双击启动脚本，享受可视化操作体验。
+
+```bash
+# MacOS/Linux
+./start.sh
+
+# Windows
+.\start.bat
+
+# 或直接运行
+python run_paperang.py
+```
+
+GUI 功能：
+- 📝 文字打印（可调字体大小 8-72pt）
+- 🖼️ 图片打印（带预览，支持 floyd/adaptive 模式）
+- 📱 二维码打印
+- ⚙️ 打印机控制（走纸、自检、电量查询）
+- 🔍 自动设备发现与连接
+
+### 💻 命令行模式 / CLI Mode
 
 > 适合脚本、自动化、AI agent 调用。每个命令连接 → 打印 → 断开。
 
@@ -126,10 +202,6 @@ python paperang/interactive.py
 | `/help` | 显示帮助 |
 | 直接回车 | 走纸 25 单位 |
 
-### Windows 一键启动
-
-双击 `scripts/喵喵机.bat`，可选择交互模式 / 命令行帮助 / 自检打印。
-
 ---
 
 ## 📁 项目结构 / Project Structure
@@ -145,16 +217,23 @@ paperang-miaomiaoji-tool-gen2/
 │   ├── const.py                  # 蓝牙协议常量
 │   ├── image.py                  # 图像处理（二值化/缩放/二维码）
 │   ├── text.py                   # 文字转位图
-│   └── interactive.py            # 交互式终端界面
+│   ├── interactive.py            # 交互式终端界面
+│   ├── gui.py                    # Tkinter 图形界面
+│   └── mac_auto_print.py         # MacOS 自动设备发现
 ├── assets/                       # 静态资源
 │   ├── MapleMono-NF-CN-Light.ttf # 等宽字体
 │   └── test_image.jpg            # 测试图片
 ├── img/                          # 文档截图
 ├── scripts/
-│   └── 喵喵机.bat                # Windows 启动脚本
+│   └── 喵喵机.bat                # Windows 启动脚本（旧版）
+├── setup_env.py                  # 🆕 自动环境配置脚本
+├── run_paperang.py               # 🆕 统一启动入口（GUI/CLI）
+├── start.sh / start.bat          # 🆕 一键启动脚本（自动生成）
 ├── SKILL.md                      # Claude Code Skill 定义
 ├── requirements.txt
-├── README.md
+├── README.md                     # 本文档
+├── README_GUI.md                 # GUI 详细使用文档
+├── README_MACOS.md               # MacOS 适配说明
 ├── LICENSE
 └── .gitignore
 ```
@@ -165,6 +244,47 @@ paperang-miaomiaoji-tool-gen2/
 
 本项目根目录下的 `SKILL.md` 是 Claude Code skill 定义文件。
 在 Claude Code 中使用 `/paperang` 即可让 AI 助手操控喵喵机打印。
+
+---
+
+## 🔍 故障排除 / Troubleshooting
+
+### MacOS 常见问题
+
+**Q: 找不到蓝牙设备？**
+- 确保已在系统设置→蓝牙中配对 Paperang 设备
+- 检查权限：系统设置→隐私与安全性→蓝牙，确保终端应用已授权
+- 运行 `python run_paperang.py scan` 扫描设备
+
+**Q: GUI 无法启动（Tkinter 错误）？**
+```bash
+# 安装 tkinter
+brew install python-tk
+```
+
+**Q: 权限被拒绝？**
+```bash
+# 赋予执行权限
+chmod +x start.sh
+```
+
+### Windows 常见问题
+
+**Q: 找不到 COM 端口？**
+- 打开"设备管理器"→"端口 (COM & LPT)"查看 Paperang 设备
+- 重新配对设备并添加传出 COM 端口
+
+**Q: tkinter 缺失？**
+- 重新安装 Python，确保勾选 "tcl/tk" 选项
+
+### Linux 常见问题
+
+**Q: 权限不足？**
+```bash
+# 将用户加入 dialout 组
+sudo usermod -a -G dialout $USER
+# 重启或重新登录
+```
 
 ---
 
@@ -183,7 +303,7 @@ paperang-miaomiaoji-tool-gen2/
 
 - 原始项目 [ihciah/miaomiaoji-tool](https://github.com/ihciah/miaomiaoji-tool) — 喵喵机蓝牙协议逆向
 - 字体 [subframe7536/maple-font](https://github.com/subframe7536/maple-font) — MapleMono 等宽字体
-- 作者 [createskyblue](https://github.com/createskyblue) — 二代适配、CLI 重构、交互式功能
+- 作者 [createskyblue](https://github.com/createskyblue) — 二代适配、CLI 重构、交互式功能、GUI 界面、MacOS 适配
 
 ---
 
